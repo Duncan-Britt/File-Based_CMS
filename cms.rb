@@ -4,8 +4,8 @@ require 'sinatra/content_for'
 require "tilt/erubis"
 
 configure do
-  # enable :sessions
-  # set :session_secret, 'secret'
+  enable :sessions
+  set :session_secret, 'secret'
   set :erb, :escape_html => true
 end
 
@@ -24,9 +24,13 @@ def file_data_by_name(file_name)
   @files.find { |info| info[:name] == file_name }
 end
 
-get '/data/:file_name' do
+get '/:file_name' do
   file_name = params[:file_name]
-  content_type :text
-  file = file_data_by_name(file_name)
-  File.read(file[:path])
+  if file = file_data_by_name(file_name)
+    content_type :text
+    File.read(file[:path])
+  else
+    session[:message] = "#{file_name} does not exist."
+    redirect '/'
+  end
 end

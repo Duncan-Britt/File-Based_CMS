@@ -5,6 +5,11 @@
   <title>CMS</title>
 </head>
 <body>
+  <header>
+    <% if session[:message] %>
+      <p><strong><%= session.delete(:message) %></strong></p>
+    <% end %>
+  </header>
   <%== yield %>
 </body>
 </html>
