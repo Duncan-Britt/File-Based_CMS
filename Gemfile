@@ -8,6 +8,7 @@ gem 'rubocop', '~> 1.2.0', groups: [:development, :test]
 gem 'minitest'
 gem 'minitest-reporters'
 gem 'rack-test'
+gem 'redcarpet'
 
 group :production do
   gem "puma"
