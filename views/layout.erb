@@ -3,11 +3,12 @@
 <head>
   <meta charset="utf-8" />
   <title>CMS</title>
+  <link rel="stylesheet" href="/stylesheets/cms.css">
 </head>
 <body>
   <header>
     <% if session[:message] %>
-      <p><strong><%= session.delete(:message) %></strong></p>
+      <p class="flash-message"><strong><%= session.delete(:message) %></strong></p>
     <% end %>
   </header>
   <%== yield %>

@@ -10,9 +10,16 @@ configure do
   set :erb, :escape_html => true
 end
 
+def data_path
+  if ENV["RACK_ENV"] == "test"
+    File.expand_path("../test/data", __FILE__)
+  else
+    File.expand_path("../data", __FILE__)
+  end
+end
+
 before do
-  root = File.expand_path("..", __FILE__)
-  @files = Dir.glob(root + "/data/*").map do |path|
+  @files = Dir.glob(data_path + "/*").map do |path|
     name = File.basename(path)
     { path: path, name: name }
   end
@@ -30,11 +37,15 @@ def render_file(file_name, contents)
   if File.extname(file_name) == ".md"
     content_type :html
     markdown = Redcarpet::Markdown.new(Redcarpet::Render::HTML)
-    return markdown.render(contents)
+    return erb markdown.render(contents)
   else
     content_type :text
     return contents
   end
+end
+
+get '/new_document' do
+  erb :new_document, layout: :layout
 end
 
 get '/:file_name' do
@@ -46,4 +57,57 @@ get '/:file_name' do
     session[:message] = "#{file_name} does not exist."
     redirect '/'
   end
+end
+
+get '/:file_name/edit' do
+  file_name = params[:file_name]
+  if file = file_data_by_name(file_name)
+    @contents = File.read(file[:path])
+
+    erb :edit, layout: :layout
+  else
+    session[:message] = "#{file_name} does not exist."
+    redirect '/'
+  end
+end
+
+post '/:file_name/edit' do
+  file_name = params[:file_name]
+  updated_content = params[:content]
+  file_data = file_data_by_name(file_name)
+  file = File.open(file_data[:path], 'w')
+  file.write updated_content
+
+  file.close
+
+  session[:message] = "#{file_name} has been updated"
+  redirect '/'
+end
+
+def create_document(name, content = "")
+  File.open(File.join(data_path, name), "w") do |file|
+    file.write(content)
+  end
+end
+
+post '/new_document' do
+  document_name = params[:document_name].strip
+  if document_name.empty?
+    session[:message] = "A name is required."
+    status 422
+    erb :new_document, layout: :layout
+  else
+    create_document document_name
+    session[:message] = "#{document_name} has been created successfully"
+    redirect '/'
+  end
+end
+
+post '/:file_name/delete' do
+  file_name = params[:file_name]
+  if file_data = file_data_by_name(file_name)
+    File.delete(file_data[:path])
+    session[:message] = "#{file_name} was deleted"
+  end
+  redirect '/'
 end

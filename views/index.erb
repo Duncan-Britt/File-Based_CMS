@@ -1,5 +1,13 @@
 <ul>
   <% @files.each do |file| %>
-  <li><a href="/<%= file[:name] %>"><%= file[:name] %></a></li>
+  <li>
+    <a href="/<%= file[:name] %>"><%= file[:name] %></a>
+    <a href="/<%= file[:name] %>/edit"> edit </a>
+    <form class="inline" action="/<%= file[:name] %>/delete" method="post">
+      <button type="submit">delete</button>
+    </form>
+  </li>
   <% end %>
 </ul>
+
+<a href="/new_document">New Document</a>
