@@ -48,6 +48,10 @@ get '/new_document' do
   erb :new_document, layout: :layout
 end
 
+get '/sign_in' do
+  erb :sign_in, layout: :layout
+end
+
 get '/:file_name' do
   file_name = params[:file_name]
   if file = file_data_by_name(file_name)
@@ -109,5 +113,30 @@ post '/:file_name/delete' do
     File.delete(file_data[:path])
     session[:message] = "#{file_name} was deleted"
   end
+  redirect '/'
+end
+
+def correct_credentials?(username, password)
+  username == "admin" && password = "secret"
+end
+
+post '/sign_in' do
+  username = params[:username]
+  password = params[:password]
+
+  if correct_credentials?(username, password)
+    session[:message] = "Welcome!"
+    session[:credentials] = { username: username, password: password }
+    redirect '/'
+  else
+    session[:message] = "Invalid credentials"
+    status 422
+    erb :sign_in, layout: :layout
+  end
+end
+
+post '/sign_out' do
+  session.delete(:credentials)
+  session[:message] = "You have been signed out."
   redirect '/'
 end

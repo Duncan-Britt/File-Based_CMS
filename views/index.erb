@@ -11,3 +11,15 @@
 </ul>
 
 <a href="/new_document">New Document</a>
+<br />
+<br />
+
+<% if session[:credentials] %>
+  <% content_for :footer_sign_out do %>
+    <form class="inline" action="sign_out" method="post">
+      <button type="submit">Sign out</button>
+    </form>
+  <% end %>
+<% else %>
+  <a href="/sign_in">Sign in</a>
+<% end %>

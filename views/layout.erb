@@ -12,5 +12,10 @@
     <% end %>
   </header>
   <%== yield %>
+  <footer>
+    <% if session[:credentials] %>
+      <em>Signed in as <%= session[:credentials][:username] %></em> <%==  yield_content :footer_sign_out %>
+    <% end %>
+  </footer>
 </body>
 </html>
