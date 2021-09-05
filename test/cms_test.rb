@@ -162,7 +162,6 @@ class CMSTest < Minitest::Test
   end
 
   def test_sign_out
-    # post '/sign_in', username: 'admin', password: 'secret'
     get '/', {}, {"rack.session" => { credentials: { username: 'admin', password: 'secret'} } }
     refute_nil session[:credentials]
     post '/sign_out'
