@@ -3,6 +3,8 @@ require "sinatra/reloader" if development?
 require 'sinatra/content_for'
 require "tilt/erubis"
 require 'redcarpet'
+require 'yaml'
+require 'bcrypt'
 
 configure do
   enable :sessions
@@ -44,7 +46,16 @@ def render_file(file_name, contents)
   end
 end
 
+def credentials_guard_clause
+  unless session[:credentials] == { username: 'admin', password: '$2a$12$D2naHI5pZ52Sc/0qsH4apODd6dkSW3L9ZWNhmF.imBewAQPzmMtPC' }
+    session[:message] = "You must be signed in to do that."
+    redirect '/'
+  end
+end
+
 get '/new_document' do
+  credentials_guard_clause
+
   erb :new_document, layout: :layout
 end
 
@@ -64,6 +75,8 @@ get '/:file_name' do
 end
 
 get '/:file_name/edit' do
+  credentials_guard_clause
+
   file_name = params[:file_name]
   if file = file_data_by_name(file_name)
     @contents = File.read(file[:path])
@@ -76,6 +89,8 @@ get '/:file_name/edit' do
 end
 
 post '/:file_name/edit' do
+  credentials_guard_clause
+
   file_name = params[:file_name]
   updated_content = params[:content]
   file_data = file_data_by_name(file_name)
@@ -95,6 +110,8 @@ def create_document(name, content = "")
 end
 
 post '/new_document' do
+  credentials_guard_clause
+
   document_name = params[:document_name].strip
   if document_name.empty?
     session[:message] = "A name is required."
@@ -108,6 +125,8 @@ post '/new_document' do
 end
 
 post '/:file_name/delete' do
+  credentials_guard_clause
+
   file_name = params[:file_name]
   if file_data = file_data_by_name(file_name)
     File.delete(file_data[:path])
@@ -116,8 +135,18 @@ post '/:file_name/delete' do
   redirect '/'
 end
 
+def load_user_credentials
+  path = if ENV["RACK_ENV"] == 'test'
+    File.expand_path("../test/users.yml", __FILE__)
+  else
+    File.expand_path("../users.yml", __FILE__)
+  end
+  YAML.load(File.read(path))
+end
+
 def correct_credentials?(username, password)
-  username == "admin" && password = "secret"
+  credentials = load_user_credentials
+  BCrypt::Password.new(credentials[username]) == password
 end
 
 post '/sign_in' do
